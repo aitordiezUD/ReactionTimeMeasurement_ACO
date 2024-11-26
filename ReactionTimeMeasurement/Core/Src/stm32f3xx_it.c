@@ -22,6 +22,9 @@
 #include "stm32f3xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
+#include "string.h"
+#include <stdint.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,9 +58,12 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN EV */
-
+extern UART_HandleTypeDef huart2;
+extern uint64_t contadorTimer;
+extern uint64_t timerEspera;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -197,6 +203,77 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f3xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles EXTI line 1 interrupt.
+  */
+void EXTI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI1_IRQn 0 */
+	  char cadena[50];
+	  sprintf(cadena, "Interrupt 2: %d\n\r",contadorTimer);
+	  HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+  /* USER CODE END EXTI1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+  /* USER CODE BEGIN EXTI1_IRQn 1 */
+
+  /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line[9:5] interrupts.
+  */
+void EXTI9_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
+//	char cadena[50];
+//	sprintf(cadena, "Contador ms: %d\n\r",contadorTimer);
+	HAL_TIM_Base_Stop_IT(&htim3);
+	  char cadena[50];
+	  sprintf(cadena, "Tiempo de respuesta: %d\n\r",contadorTimer);
+	  HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+//	HAL_UART_Transmit_IT(&huart2, (uint8_t *) cadena, strlen(cadena));
+  /* USER CODE END EXTI9_5_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
+  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
+  /* USER CODE END EXTI9_5_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM2 global interrupt.
+  */
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+	contadorTimer++;
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+
+  /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM3 global interrupt.
+  */
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+	if (timerEspera == 3000){
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 1);
+		HAL_TIM_Base_Stop_IT(&htim3);
+		HAL_TIM_Base_Start_IT(&htim2);
+	}else{
+		timerEspera++;
+	}
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 
