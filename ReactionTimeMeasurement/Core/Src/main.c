@@ -21,9 +21,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
 #include "string.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,14 +48,18 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim2; // Mide el tiempo de reaccion del usuario
+TIM_HandleTypeDef htim3; // Mide el tiempo de espera antes de encenderse las leds
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint64_t contadorTimer = 0;
-volatile uint64_t timerEspera = 0;
+volatile uint64_t contadorTimerModo1 = 0;
+volatile uint64_t timerEsperaModo1 = 0;
+volatile uint64_t tiempoEsperaModo1 = 0;
+volatile uint8_t flagModo1 = 0;
+volatile uint64_t ledModo1 = 0;
+volatile uint8_t jugando = 0;
 
 /* USER CODE END PV */
 
@@ -64,6 +71,48 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
+void init_random_seed() {
+    // Usa HAL_GetTick() como semilla para srand()
+//    srand(HAL_GetTick());
+    srand(time(NULL));
+}
+
+// Función para generar un número aleatorio en el rango dado [min, max]
+uint64_t generarNumeroAleatorio(uint64_t min, uint64_t max) {
+    if (min > max) {
+        return -1; // Devuelve -1 si el rango no es válido
+    }
+    uint64_t numero = min + rand() % (max - min + 1);
+//	char cadena[50];
+//	sprintf(cadena, "Generado = %d\n\r",numero);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+    return numero;
+}
+
+void modo1(void){
+	flagModo1 = 1;
+	tiempoEsperaModo1 = generarNumeroAleatorio(3000, 6000);
+	ledModo1 = generarNumeroAleatorio(0, 1);
+//	sprintf(cadena, "tiempoEspera = %d\n\r",tiempoEspera);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+//	sprintf(cadena, "ledModo1 = %d\n\r",ledModo1);
+//	HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+//	char cadena[50];
+//	sprintf(cadena, "Empezando tiempo de espera\n\r");
+//	HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+	HAL_TIM_Base_Start_IT(&htim3);
+
+}
+
+void jugar(int opcion){
+	if (opcion == 1){
+		jugando = 1;
+//		char cadena[50];
+//		sprintf(cadena, "Modo de juego 1\n\r");
+//		HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+		modo1();
+	}
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,18 +152,23 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  init_random_seed();
+
   /* USER CODE BEGIN 2 */
 //  HAL_TIM_Base_Start_IT(&htim2);
-  HAL_TIM_Base_Start_IT(&htim3);
+//  HAL_TIM_Base_Start_IT(&htim3);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 0);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 0);
   /* USER CODE END 2 */
-
+  jugar(1);
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  if (jugando == 0){
+		  jugar(1);
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

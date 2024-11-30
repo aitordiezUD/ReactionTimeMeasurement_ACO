@@ -62,8 +62,14 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN EV */
 extern UART_HandleTypeDef huart2;
-extern uint64_t contadorTimer;
-extern uint64_t timerEspera;
+extern uint64_t contadorTimerModo1;
+extern uint64_t timerEsperaModo1;
+extern uint64_t tiempoEsperaModo1;
+extern uint8_t flagModo1;
+extern uint64_t ledModo1;
+extern uint8_t jugando;
+
+
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -210,12 +216,22 @@ void SysTick_Handler(void)
 void EXTI1_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI1_IRQn 0 */
-	  char cadena[50];
-	  sprintf(cadena, "Interrupt 2: %d\n\r",contadorTimer);
-	  HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+
   /* USER CODE END EXTI1_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
+  if (flagModo1 == 1 & ledModo1 == 0){
+		flagModo1 = 0;
+		HAL_TIM_Base_Stop_IT(&htim3);
+		char cadena[50];
+		sprintf(cadena, "Tiempo de Respuesta:%d\n\r",contadorTimerModo1);
+		HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+		HAL_TIM_Base_Stop_IT(&htim2);
+		contadorTimerModo1 = 0;
+		jugando = 0;
+		flagModo1 = 0;
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 0);
+  }
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
 
   /* USER CODE END EXTI1_IRQn 1 */
 }
@@ -226,12 +242,17 @@ void EXTI1_IRQHandler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-//	char cadena[50];
-//	sprintf(cadena, "Contador ms: %d\n\r",contadorTimer);
-	HAL_TIM_Base_Stop_IT(&htim3);
-	  char cadena[50];
-	  sprintf(cadena, "Tiempo de respuesta: %d\n\r",contadorTimer);
-	  HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+  if (flagModo1 == 1 & ledModo1 == 1){
+		flagModo1 = 0;
+		HAL_TIM_Base_Stop_IT(&htim3);
+		char cadena[50];
+		sprintf(cadena, "Tiempo de Respuesta:%d\n\r",contadorTimerModo1);
+		HAL_UART_Transmit(&huart2, (uint8_t *) cadena, strlen(cadena), 1000);
+		HAL_TIM_Base_Stop_IT(&htim2);
+		contadorTimerModo1 = 0;
+		jugando = 0;
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 0);
+  }
 //	HAL_UART_Transmit_IT(&huart2, (uint8_t *) cadena, strlen(cadena));
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
@@ -246,7 +267,9 @@ void EXTI9_5_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-	contadorTimer++;
+	if (flagModo1 == 1){
+		contadorTimerModo1++;
+	}
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
@@ -261,12 +284,19 @@ void TIM2_IRQHandler(void)
 void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
-	if (timerEspera == 3000){
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 1);
-		HAL_TIM_Base_Stop_IT(&htim3);
-		HAL_TIM_Base_Start_IT(&htim2);
-	}else{
-		timerEspera++;
+	if (flagModo1 == 1){
+		if (timerEsperaModo1 == tiempoEsperaModo1){
+			if (ledModo1 == 0){
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 1);
+			}else{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 1);
+			}
+			timerEsperaModo1 = 0;
+			HAL_TIM_Base_Stop_IT(&htim3);
+			HAL_TIM_Base_Start_IT(&htim2);
+		}else{
+			timerEsperaModo1++;
+		}
 	}
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
