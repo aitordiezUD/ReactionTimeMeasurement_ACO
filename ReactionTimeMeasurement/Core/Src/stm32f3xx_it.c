@@ -69,6 +69,7 @@ extern uint64_t tiempoEsperaModo1;
 extern uint8_t flagModo1;
 extern uint64_t ledModo1;
 extern uint8_t jugando;
+extern uint8_t flagEmpezado;
 // MODO 2
 extern uint8_t flagModo2;
 extern uint64_t contadorTimerModo2;
@@ -233,23 +234,52 @@ void EXTI1_IRQHandler(void)
 		HAL_TIM_Base_Stop_IT(&htim2);
 		HAL_TIM_Base_Stop_IT(&htim3);
 		char cadena[50];
-		sprintf(cadena, "%d\n\r", contadorTimerModo1);
+		if (flagEmpezado == 0){
+			sprintf(cadena, "%d\n\r", -1);  // -1 significa que todavia el temporizador no ha empezado a contar
+			timerEsperaModo1 = 0;
+		}else{
+			sprintf(cadena, "%d\n\r", contadorTimerModo1);
+		}
 		HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000);
-
 		contadorTimerModo1 = 0;
 		jugando = 0;
+		flagEmpezado = 0;
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 0);
+	}else if (flagModo1 == 1 && ledModo1 == 1) {
+		flagModo1 = 0;
+		HAL_TIM_Base_Stop_IT(&htim2);
+		HAL_TIM_Base_Stop_IT(&htim3);
+		char cadena[50];
+		if (flagEmpezado == 0){
+			sprintf(cadena, "%d\n\r", -1);
+			HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000); // -1 significa que todavia el temporizador no ha empezado a contar
+			timerEsperaModo1 = 0;
+		}else{
+			sprintf(cadena, "%d\n\r", -2);
+			HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000); // -2 significa que ha pulsado el pulsador incorrecto
+			timerEsperaModo1 = 0;
+		}
+		contadorTimerModo1 = 0;
+		jugando = 0;
+		flagEmpezado = 0;
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 0);
+//	} else if (flagModo2 == 1 && buzzerActivado == 1) {
+	} else if (flagModo2 == 1) {
 
-
-	} else if (flagModo2 == 1 && buzzerActivado == 1) {
 		flagModo2 = 0;
 		HAL_TIM_Base_Stop_IT(&htim2);
 		char cadena[50];
-		sprintf(cadena, "%d\n\r", contadorTimerModo2);
+		if (flagEmpezado == 0){
+			sprintf(cadena, "%d\n\r", -1);  // -1 significa que todavia el temporizador no ha empezado a contar
+			timerEsperaModo2 = 0;
+		}else{
+			sprintf(cadena, "%d\n\r", contadorTimerModo2);
+		}
 		HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000);
 		contadorTimerModo2 = 0;
-		buzzerActivado = 0;
+//		buzzerActivado = 0;
 		jugando = 0;
+		flagEmpezado = 0;
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 0);
 	}
 	HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
@@ -264,16 +294,61 @@ void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 	if (flagModo1 == 1 && ledModo1 == 1) {
+//		flagModo1 = 0;
+//		HAL_TIM_Base_Stop_IT(&htim3);
+//		char cadena[50];
+//		sprintf(cadena, "%d\n\r", contadorTimerModo1);
+//		HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000);
+//		HAL_TIM_Base_Stop_IT(&htim2);
+//		contadorTimerModo1 = 0;
+//		jugando = 0;
+//		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 0);
+
 		flagModo1 = 0;
+		HAL_TIM_Base_Stop_IT(&htim2);
 		HAL_TIM_Base_Stop_IT(&htim3);
 		char cadena[50];
-//		sprintf(cadena, "Tiempo de Respuesta:%d\n\r", contadorTimerModo1);
-		sprintf(cadena, "%d\n\r", contadorTimerModo1);
+		if (flagEmpezado == 0){
+			sprintf(cadena, "%d\n\r", -1);
+			timerEsperaModo1 = 0;
+		}else{
+			sprintf(cadena, "%d\n\r", contadorTimerModo1);
+		}
 		HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000);
-		HAL_TIM_Base_Stop_IT(&htim2);
 		contadorTimerModo1 = 0;
 		jugando = 0;
+		flagEmpezado = 0;
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, 0);
+	}else if (flagModo1 == 1 && ledModo1 == 0) {
+		flagModo1 = 0;
+		HAL_TIM_Base_Stop_IT(&htim2);
+		HAL_TIM_Base_Stop_IT(&htim3);
+		char cadena[50];
+		if (flagEmpezado == 0){
+			sprintf(cadena, "%d\n\r", -1);
+			HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000); // -1 significa que todavia el temporizador no ha empezado a contar
+			timerEsperaModo1 = 0;
+		}else{
+			sprintf(cadena, "%d\n\r", -2);
+			HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000); // -2 significa que ha pulsado el pulsador incorrecto
+			timerEsperaModo1 = 0;
+		}
+		contadorTimerModo1 = 0;
+		jugando = 0;
+		flagEmpezado = 0;
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 0);
+	}else if (flagModo2 == 1) {
+		flagModo2 = 0;
+		HAL_TIM_Base_Stop_IT(&htim2);
+		char cadena[50];
+		sprintf(cadena, "%d\n\r", -3);
+		HAL_UART_Transmit(&huart2, (uint8_t*) cadena, strlen(cadena), 1000); // -3 significa que ha pulsado el pulsador incorrecto para jugar al modo del buzzer
+		contadorTimerModo2 = 0;
+		timerEsperaModo2 = 0;
+		buzzerActivado = 0;
+		jugando = 0;
+		flagEmpezado = 0;
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, 0);
 	}
 //	HAL_UART_Transmit_IT(&huart2, (uint8_t *) cadena, strlen(cadena));
   /* USER CODE END EXTI9_5_IRQn 0 */
@@ -318,6 +393,7 @@ void TIM3_IRQHandler(void)
 			timerEsperaModo1 = 0;
 			HAL_TIM_Base_Stop_IT(&htim3);
 			HAL_TIM_Base_Start_IT(&htim2);
+			flagEmpezado=1;
 		} else {
 			timerEsperaModo1++;
 		}
@@ -326,8 +402,9 @@ void TIM3_IRQHandler(void)
 			timerEsperaModo2 = 0;
 			HAL_TIM_Base_Stop_IT(&htim3);
 			startBuzzer(392);
-			buzzerActivado = 1;
+//			buzzerActivado = 1;
 			HAL_TIM_Base_Start_IT(&htim2);
+			flagEmpezado=1;
 		} else {
 			timerEsperaModo2++;
 		}

@@ -63,6 +63,7 @@ volatile uint64_t timerEsperaModo1 = 0;
 volatile uint64_t tiempoEsperaModo1 = 0;
 volatile uint8_t flagModo1 = 0;
 volatile uint64_t ledModo1 = 0;
+volatile uint8_t flagEmpezado = 0;
 // MODO 2 - BUZZER
 volatile uint8_t flagModo2 = 0;
 volatile uint64_t contadorTimerModo2 = 0;
